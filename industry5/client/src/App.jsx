@@ -5,11 +5,13 @@ import { UserCircle, Sun, Moon, Database, LayoutDashboard } from 'lucide-react';
 // --- COMPONENTS ---
 import Sidebar from './components/layout/Sidebar';
 import UniversalCore from './components/dashboard/UniversalCore';
+import SaasDashboard from './components/dashboard/SaasDashboard'; // NEW IMPORT
 import ModuleSelector from './components/onboarding/ModuleSelector';
 import LogicBuilder from './components/onboarding/LogicBuilder';
 import ChatWidget from './components/ChatWidget';
 import DatabaseView from './components/DatabaseView';
 import Login from './components/auth/Login';
+import ErrorBoundary from './components/ErrorBoundary'; // NEW IMPORT
 
 // --- PLACEHOLDERS ---
 const FinancialView = () => <div className="p-8 text-slate-500">Financial View Component</div>;
@@ -35,43 +37,17 @@ function MainApp() {
 
   return (
     <Router>
+      {/* ... (Routes unchanged until DashboardLayout) */}
       <div className={`min-h-screen font-sans ${isDarkMode ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'}`}>
-        <Routes>
-          <Route path="/" element={<Login />} />
-
-          <Route
-            path="/select"
-            element={<SelectorWrapper onSelect={handleIndustrySelect} />}
-          />
-
-          <Route
-            path="/builder"
-            element={
-              selectedIndustry ? (
-                <BuilderWrapper
-                  industryData={selectedIndustry}
-                  onComplete={handleLaunchDashboard}
-                />
-              ) : <Navigate to="/select" />
-            }
-          />
-
-          <Route
-            path="/dashboard/*"
-            element={
-              <DashboardLayout
-                isDarkMode={isDarkMode}
-                setIsDarkMode={setIsDarkMode}
-                businessData={businessData}
-                selectedIndustry={selectedIndustry}
-              />
-            }
-          />
-        </Routes>
-
-        {/* Chat Widget available globally or just on dashboard? Usually global is fine but prompt implied dashboard section. 
-            Putting it here makes it available everywhere which is good for help. */}
-        <ChatWidget />
+        <ErrorBoundary>
+          <Routes>
+            <Route path="/" element={<Login />} />
+            <Route path="/select" element={<SelectorWrapper onSelect={handleIndustrySelect} />} />
+            <Route path="/builder" element={selectedIndustry ? (<BuilderWrapper industryData={selectedIndustry} onComplete={handleLaunchDashboard} />) : (<Navigate to="/select" />)} />
+            <Route path="/dashboard/*" element={<DashboardLayout isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} businessData={businessData} selectedIndustry={selectedIndustry} />} />
+          </Routes>
+          <ChatWidget />
+        </ErrorBoundary>
       </div>
     </Router>
   );
@@ -96,6 +72,15 @@ const DashboardLayout = ({ isDarkMode, setIsDarkMode, businessData, selectedIndu
 
   const bgClass = isDarkMode ? 'bg-slate-950' : 'bg-slate-50';
   const headerClass = isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200';
+
+  // Determine which dashboard to show
+  const renderDashboard = () => {
+    if (selectedIndustry?.id === 'saas') {
+      return <SaasDashboard data={businessData} isDarkMode={isDarkMode} />;
+    }
+    // Default to UniversalCore
+    return <UniversalCore isDarkMode={isDarkMode} data={businessData} />;
+  };
 
   return (
     <div className="flex min-h-screen">
@@ -152,7 +137,7 @@ const DashboardLayout = ({ isDarkMode, setIsDarkMode, businessData, selectedIndu
             <DatabaseView />
           ) : (
             <>
-              {activeTab === 'overview' && <UniversalCore isDarkMode={isDarkMode} data={businessData} />}
+              {activeTab === 'overview' && renderDashboard()}
               {activeTab === 'financials' && <FinancialView />}
               {activeTab === 'ai-analyst' && <AiAnalystView />}
               {activeTab === 'industry' && <IndustryView />}
