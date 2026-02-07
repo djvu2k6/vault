@@ -8,21 +8,20 @@ import { TrendingUp, TrendingDown, DollarSign, Activity, Brain, Calculator, Load
 // IMPORT THE API HELPER
 import { api } from '../../api';
 
-const UniversalCore = ({ isDarkMode }) => {
-
+const UniversalCore = ({ isDarkMode, initialInputs = {} }) => {
   // --- STATE MANAGEMENT ---
   const [loading, setLoading] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiResponse, setAiResponse] = useState(null);
 
   // 1. INPUTS (Start EMPTY - Zeros)
-  const [inputs, setInputs] = useState({
-    industry_type: 'General',
-    selling_price: 0,
-    variable_cost_unit: 0,
-    units_sold: 0,
-    fixed_costs: 0
-  });
+  const [inputs, setInputs] = useState(() => ({
+    industry_type: initialInputs.industry_type || 'General',
+    selling_price: initialInputs.selling_price ?? 0,
+    variable_cost_unit: initialInputs.variable_cost_unit ?? 0,
+    units_sold: initialInputs.units_sold ?? 0,
+    fixed_costs: initialInputs.fixed_costs ?? 0
+  }));
 
   // 2. RESULTS
   const [results, setResults] = useState({
